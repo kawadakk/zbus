@@ -1104,6 +1104,10 @@ mod tests {
                 [0x48, 0x00, 0x65, 0x6c, 0x6c, 0x6f, 0x00], \
                 b\"Hello\", b\"\", b\" \", b\"'\", b\"\\n'\\\"\", b\"\\\\\"]"
         );
+        assert_eq!(
+            Value::new(b"\x80\xa0\xd0\xff\0".to_vec()).to_string(),
+            r#"b"\x80\xa0\xd0\xff""#,
+        );
 
         assert_eq!(
             Value::new(HashMap::<bool, bool>::new()).to_string(),
