@@ -324,10 +324,15 @@ where
 
         let seq = self.serialize_seq(len)?;
 
+        // A fixed-sized dictionary entry should be padded to its alignment
+        let should_pad_value_tail =
+            key_signature.is_fixed_sized() && value_signature.is_fixed_sized();
+
         Ok(MapSerializer {
             seq,
             key_signature,
             value_signature,
+            should_pad_value_tail,
             key_start,
         })
     }
@@ -691,6 +696,7 @@ pub struct MapSerializer<'ser, 'b, W> {
     seq: SeqSerializer<'ser, 'b, W>,
     key_signature: &'ser Signature,
     value_signature: &'ser Signature,
+    should_pad_value_tail: bool,
     // start of last dict-entry key written
     key_start: Option<usize>,
 }
@@ -727,6 +733,10 @@ where
         self.seq.ser.0.signature = self.value_signature;
         value.serialize(&mut *self.seq.ser)?;
         self.seq.ser.0.signature = self.key_signature;
+
+        if self.should_pad_value_tail {
+            self.seq.ser.0.add_padding(self.seq.element_alignment)?;
+        }
 
         if let Some(key_offset) = key_offset {
             let entry_size = self.seq.ser.0.bytes_written - self.key_start.unwrap_or(0);
