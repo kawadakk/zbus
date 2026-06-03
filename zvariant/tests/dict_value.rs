@@ -114,6 +114,24 @@ fn dict_value() {
     }
     let ctxt = Context::new_dbus(NATIVE_ENDIAN, 0);
 
+    // Dict<u32, u8>
+    let mut map: HashMap<u32, u8> = HashMap::new();
+    map.insert(1, 2);
+    let encoded = to_bytes(ctxt, &map).unwrap();
+    assert_eq!(encoded.bytes(), b"\x05\0\0\0\0\0\0\0\x01\0\0\0\x02");
+    let decoded: HashMap<u32, u8> = encoded.deserialize().unwrap().0;
+    assert_eq!(decoded, map);
+
+    // GVariant format now
+    #[cfg(feature = "gvariant")]
+    {
+        let ctxt = Context::new_gvariant(NATIVE_ENDIAN, 0);
+        let encoded = to_bytes(ctxt, &map).unwrap();
+        assert_eq!(encoded.bytes(), b"\x01\0\0\0\x02\0\0\0");
+        let map: HashMap<u32, u8> = encoded.deserialize().unwrap().0;
+        assert_eq!(decoded, map);
+    }
+
     // Now a hand-crafted Dict Value but with a Value as value
     let mut dict = Dict::new(<&str>::SIGNATURE, Value::SIGNATURE);
     dict.add("hello", Value::new("there")).unwrap();
