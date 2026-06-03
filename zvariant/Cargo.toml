@@ -2,13 +2,13 @@
 name = "zvariant"
 version = "5.12.0"
 authors = ["Zeeshan Ali Khan <zeeshanak@gnome.org>"]
-edition = { workspace = true }
-rust-version = { workspace = true }
+edition = "2024"
+rust-version = "1.87"
 
 description = "D-Bus & GVariant encoding & decoding"
-repository = { workspace = true }
+repository = "https://github.com/z-galaxy/zbus/"
 keywords = ["D-Bus", "DBus", "IPC", "GVariant"]
-license = { workspace = true }
+license = "MIT"
 categories = ["data-structures", "encoding", "parsing"]
 readme = "README.md"
 
@@ -24,28 +24,28 @@ camino = ["dep:camino"]
 [dependencies]
 zvariant_derive = { path = "../zvariant_derive", version = "5.12.0" }
 zvariant_utils = { path = "../zvariant_utils", version = "3.4.0" }
-endi.workspace = true
-serde.workspace = true
-winnow.workspace = true
+endi = "1.1.0"
+serde = { version = "1.0.200", features = ["derive"] }
+winnow = "1.0"
 
 # Optional dependencies
-arrayvec = { workspace = true, optional = true }
-enumflags2 = { workspace = true, optional = true }
-serde_bytes = { workspace = true, optional = true }
-uuid = { workspace = true, optional = true }
-url = { workspace = true, optional = true }
-time = { workspace = true, optional = true }
-chrono = { workspace = true, optional = true }
-heapless = { workspace = true, optional = true }
-camino = { workspace = true, optional = true }
+arrayvec = { version = "0.7.4", features = ["serde"], optional = true }
+enumflags2 = { version = "0.7.9", features = ["serde"], optional = true }
+serde_bytes = { version = "0.11.14", optional = true }
+uuid = { version = "1.8.0", features = ["serde"], optional = true }
+url = { version = "2.5.0", features = ["serde"], optional = true }
+time = { version = "0.3.36", features = ["serde"], optional = true }
+chrono = { version = "0.4.38", features = ["serde"], default-features = false, optional = true }
+heapless = { version = "0.9.0", features = ["serde"], optional = true }
+camino = { version = "1.1.9", optional = true }
 
 
 [dev-dependencies]
-serde_json.workspace = true
-serde_repr.workspace = true
-fastrand.workspace = true
-criterion.workspace = true
-chrono = { workspace = true, features = [
+serde_json = "1.0.116"
+serde_repr = "0.1.19"
+fastrand = "2.3.0"
+criterion = { version = "4.0.4", package = "codspeed-criterion-compat" }
+chrono = { version = "0.4.38", features = [
     "serde",
     "alloc",
 ], default-features = false }
@@ -67,6 +67,3 @@ targets = [
     "x86_64-unknown-netbsd",
     "aarch64-linux-android",
 ]
-
-[lints]
-workspace = true
