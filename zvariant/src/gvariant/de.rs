@@ -400,6 +400,7 @@ struct ArrayDeserializer<'d, 'de, 'sig, 'f, F> {
     // Element signature in case of normal array, key signature in case of dict.
     child_signature: &'sig Signature,
     value_signature: Option<&'sig Signature>,
+    should_pad_value_tail: bool,
     // All offsets (GVariant-specific)
     offsets: Option<FramingOffsets>,
     // Length of all the offsets after the array
@@ -453,6 +454,9 @@ impl<'d, 'de, 'sig, 'f, #[cfg(unix)] F: AsFd, #[cfg(not(unix))] F>
         };
         let start = de.0.pos;
 
+        // A fixed-sized dictionary entry should be padded to its alignment
+        let should_pad_value_tail = fixed_sized_key && fixed_sized_child;
+
         Ok(Self {
             de,
             len,
@@ -460,6 +464,7 @@ impl<'d, 'de, 'sig, 'f, #[cfg(unix)] F: AsFd, #[cfg(not(unix))] F>
             element_alignment: alignment,
             child_signature,
             value_signature,
+            should_pad_value_tail,
             offsets,
             offsets_len,
             key_offset_size,
@@ -638,6 +643,10 @@ impl<'d, 'de, 'sig, 'f, #[cfg(unix)] F: AsFd, #[cfg(not(unix))] F> MapAccess<'de
         self.de.0.pos += de.0.pos;
         // No need for retaking the container depths as the value can't be incomplete.
 
+        if self.should_pad_value_tail {
+            self.de.0.parse_padding(self.element_alignment)?;
+        }
+
         if let Some(key_offset_size) = self.key_offset_size {
             self.de.0.pos += key_offset_size as usize;
         }
@@ -768,6 +777,12 @@ impl<'d, 'de, 'sig, 'f, #[cfg(unix)] F: AsFd, #[cfg(not(unix))] F> SeqAccess<'de
         if self.field_idx == self.num_fields {
             // All fields have been deserialized.
             self.de.0.container_depths = self.de.0.container_depths.dec_structure();
+
+            if self.de.0.signature.is_fixed_sized() {
+                assert_eq!(self.offsets_len, 0);
+                let alignment = self.de.0.signature.alignment(Format::GVariant);
+                self.de.0.parse_padding(alignment)?;
+            }
 
             // Skip over the framing offsets (if any)
             self.de.0.pos += self.offsets_len;
