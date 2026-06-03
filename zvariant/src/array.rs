@@ -154,18 +154,20 @@ pub(crate) fn array_display_fmt(
     // Print as string if it is a bytestring (i.e., first nul character is the last byte)
     if let [leading @ .., Value::U8(b'\0')] = array.as_ref() {
         if !leading.contains(&Value::U8(b'\0')) {
-            let bytes = leading
-                .iter()
-                .map(|v| {
-                    v.downcast_ref::<u8>()
-                        .expect("item must have a signature of a byte")
-                })
-                .collect::<Vec<_>>();
+            write!(f, "b\"")?;
 
-            let string = String::from_utf8_lossy(&bytes);
-            write!(f, "b{:?}", string.as_ref())?;
+            for v in leading.iter() {
+                let b = v
+                    .downcast_ref::<u8>()
+                    .expect("item must have a signature of a byte");
+                if b == b'\'' {
+                    write!(f, "'")?;
+                } else {
+                    write!(f, "{}", b.escape_ascii())?;
+                }
+            }
 
-            return Ok(());
+            return write!(f, "\"");
         }
     }
 
